@@ -13,12 +13,19 @@ class ReservationsController < ApplicationController
     else
       start_date = Date.parse(reservation_params[:start_date])
       end_date = Date.parse(reservation_params[:end_date])
+      hours = reservation_params[:hours]
+      times = reservation_params[:times]
       days = (end_date - start_date).to_i + 1
 
       @reservation = current_user.reservations.build(reservation_params)
       @reservation.room = room
-      @reservation.price = room.price
-      @reservation.total = room.price * days
+      if !hours.present? 
+        @reservation.price = room.price
+        @reservation.total = room.price * days
+      else
+        @reservation.price = room.pricehourly
+        @reservation.total = room.pricehourly * hours.to_i
+      end
       # @reservation.save
 
       if @reservation.Waiting!
@@ -98,6 +105,6 @@ class ReservationsController < ApplicationController
     end
 
     def reservation_params
-      params.require(:reservation).permit(:start_date, :end_date)
+      params.require(:reservation).permit(:start_date, :end_date, :hours, :times)
     end
 end

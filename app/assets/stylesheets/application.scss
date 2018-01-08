@@ -987,3 +987,15 @@ button.accordion.active:after {
   border-bottom: 3px solid transparent;
   border-top: 3px solid #00A699;
 }
+
+.hourstime,
+div.checkinpad {
+    padding-top: 10px !important;
+}
+.checkintimepad > label{
+  width:100%;
+}
+.checkintimepad select{
+ height:40px;
+ width:45px; 
+}

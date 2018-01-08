@@ -51,7 +51,6 @@ class RoomsController < ApplicationController
 
     new_params = room_params
     new_params = room_params.merge(active: true) if is_ready_room
-
     if @room.update(new_params)
       flash[:notice] = "Saved..."
     else
@@ -98,6 +97,6 @@ class RoomsController < ApplicationController
     end
 
     def room_params
-      params.require(:room).permit(:home_type, :room_type, :accommodate,:space_type, :bed_room, :bath_room, :listing_name, :summary, :address, :is_tv, :is_kitchen, :is_air, :is_heating, :is_internet, :price, :active, :instant)
+      params.require(:room).permit(:home_type, :room_type, :accommodate,:space_type, :bed_room, :bath_room, :listing_name, :summary, :address, :is_tv, :is_kitchen, :is_air, :is_heating, :is_internet, :price, :active, :instant,:pricehourly)
     end
 end
