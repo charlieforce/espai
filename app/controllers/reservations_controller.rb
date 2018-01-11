@@ -4,7 +4,7 @@ class ReservationsController < ApplicationController
 
   def create
     room = Room.find(params[:room_id])
-
+    
     if current_user == room.user
       flash[:alert] = "You cannot book your own property!"
     elsif current_user.stripe_id.blank?
@@ -14,7 +14,8 @@ class ReservationsController < ApplicationController
       start_date = Date.parse(reservation_params[:start_date])
       end_date = Date.parse(reservation_params[:end_date])
       hours = reservation_params[:hours]
-      times = reservation_params[:times]
+      start_time = reservation_params[:start_time]
+      end_time = reservation_params[:end_time]
       days = (end_date - start_date).to_i + 1
 
       @reservation = current_user.reservations.build(reservation_params)
@@ -105,6 +106,6 @@ class ReservationsController < ApplicationController
     end
 
     def reservation_params
-      params.require(:reservation).permit(:start_date, :end_date, :hours, :times)
+      params.require(:reservation).permit(:start_date, :end_date, :hours, :start_time, :end_time)
     end
 end

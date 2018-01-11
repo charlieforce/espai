@@ -17,6 +17,9 @@ class Room < ApplicationRecord
   validates :bed_room, presence: true
   validates :bath_room, presence: true
 
+  attribute :start_time, :string, default: 6
+  attribute :end_time, :string, default: 23
+
   def cover_photo(size)
     if self.photos.length > 0
       self.photos[0].image.url(size)
@@ -26,7 +29,7 @@ class Room < ApplicationRecord
   end
 
   def cover_photo_second(size)
-    if self.photos.length > 0
+    if self.photos.length > 1
       self.photos[1].image.url(size)
     else
       "blank.jpg"

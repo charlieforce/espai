@@ -13,7 +13,6 @@ class RoomsController < ApplicationController
 
   def create
     
-
     @room = current_user.rooms.build(room_params)
     if @room.save
       redirect_to listing_room_path(@room), notice: "Saved..."
@@ -48,7 +47,6 @@ class RoomsController < ApplicationController
   end
 
   def update
-
     new_params = room_params
     new_params = room_params.merge(active: true) if is_ready_room
     if @room.update(new_params)
@@ -61,19 +59,27 @@ class RoomsController < ApplicationController
 
   # --- Reservations ---
   def preload
+
     today = Date.today
+
     reservations = @room.reservations.where("(start_date >= ? OR end_date >= ?) AND status = ?", today, today, 1)
 
     render json: reservations
   end
 
   def preview
-    start_date = Date.parse(params[:start_date])
-    end_date = Date.parse(params[:end_date])
+    start_date = Date.parse(params[:start_date]).strftime("%Y-%m-%d 00:00:00")
 
-    output = {
-      conflict: is_conflict(start_date, end_date, @room)
-    }
+    if(params[:schedule] == 'per_night')
+      end_date = Date.parse(params[:end_date]).strftime("%Y-%m-%d 00:00:00")
+      output = {
+        conflict: is_conflict(start_date, end_date, @room)
+      }
+    else
+      output = {
+        conflict: is_conflict_hourly(start_date, params[:start_time].to_i, params[:end_time].to_i, @room)
+      }
+    end
 
     render json: output
   end
@@ -81,6 +87,11 @@ class RoomsController < ApplicationController
   private
     def is_conflict(start_date, end_date, room)
       check = room.reservations.where("(? < start_date AND end_date < ?) AND status = ?", start_date, end_date, 1)
+      check.size > 0? true : false
+    end
+
+    def is_conflict_hourly(start_date, start_time, end_time, room)
+      check = room.reservations.where("(start_date = ? AND start_time <= ? AND start_time >= ? AND end_time <= ? AND end_time >= ?) AND status = ?", start_date, start_time, end_time, end_time, start_time, 1)
       check.size > 0? true : false
     end
 
@@ -97,6 +108,6 @@ class RoomsController < ApplicationController
     end
 
     def room_params
-      params.require(:room).permit(:home_type, :room_type, :accommodate,:space_type, :bed_room, :bath_room, :listing_name, :summary, :address, :is_tv, :is_kitchen, :is_air, :is_heating, :is_internet, :price, :active, :instant,:pricehourly)
+      params.require(:room).permit(:home_type, :room_type, :accommodate,:space_type, :bed_room, :bath_room, :listing_name, :summary, :address, :is_tv, :is_kitchen, :is_air, :is_heating, :is_internet, :price, :active, :instant, :pricehourly, :start_time, :end_time)
     end
 end

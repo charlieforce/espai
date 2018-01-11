@@ -825,6 +825,37 @@ a {
   background-position: center center;
 }
 
+
+
+#new_reservation .hourstime > select, 
+#new_reservation .datepicker {
+    width: 100%;
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    -ms-border-radius: 0;
+    -o-border-radius: 0;
+    background: #fff;
+    border:1px solid #ddd;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    -ms-box-shadow: none;
+    -o-box-shadow: none;
+    outline: none;
+
+}
+.hourstime > select#reservation_start_time {
+    border-right: 0;
+    border-left: 0;
+}
+.panel-default > .panel-body.form-scheduler-hourly {
+    padding: 10px 0;
+}
+
+
+/*-------------------------Responsive style-----------------*/
+
 @media (min-width:1200px){.container{width:1170px}}
 @media only screen and (max-width: 767px){
 .middleSection,.work_middle_section{
@@ -998,4 +1029,9 @@ div.checkinpad {
 .checkintimepad select{
  height:40px;
  width:45px; 
+}
+
+.disabled select{
+  pointer-events: none;
+  opacity: 0.7;
 }

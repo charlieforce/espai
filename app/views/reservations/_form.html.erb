@@ -1,22 +1,22 @@
 <div class="panel panel-default">
-  <div class="panel-body">
+  <div class="panel-body form-scheduler-hourly">
     <%= form_for([@room, @room.reservations.new]) do |f| %>
       <div class="row">
           <div class="col-md-6 no_padding">Per Night  <%= f.radio_button :pricehourly, '0', :checked => true %> </div>
           <div class="col-md-6 no_padding_mg5">Hourly  <%= f.radio_button :pricehourly, '1', :checked => false %></div>
       </div>
       <div class="row hourstime" style="display: none;">
-        <div class="col-md-6 no_padding">
+        <!-- <div class="col-md-6 no_padding">
           <label>Number of Hours</label>
           <%= f.number_field :hours, placeholder: "Hours", class: 'form-control' %>
-        </div>
+        </div> -->
         
       </div>
       <div class="row">
-         <div class="col-md-6 no_padding hourstime checkintimepad" style="display: none;">
+         <%# <div class="col-md-6 no_padding hourstime checkintimepad" style="display: none;">
           <label>Check In Time</label>
           <%= f.time_select :times, placeholder: "Time", class: 'form-control' %>
-        </div>
+        <!-- </div> -->
         <div class="col-md-6 no_padding checkinpad">
           <label>Check In</label>
           <%= f.text_field :start_date, readonly: true, placeholder: "Start Date", class: "form-control datepicker" %>
@@ -25,8 +25,18 @@
           <label>Check Out</label>
           <%= f.text_field :end_date, readonly: true, placeholder: "End Date", class: "form-control datepicker", disabled: true %>
         </div>
+        <% @start_time = @room.start_time || 06
+            @end_time = @room.end_time || 23
+        %>
+        <div class="col-md-3 no_padding hourstime checkintimepad" style="display: none;">
+          <label>Start</label>
+          <%= f.select :start_time, options_for_select(("#{@start_time}".."#{@end_time}").step(1).to_a.map{|s| ["#{s}:00", s]}), placeholder: "start time", class: 'form-control' %>
+        </div>
+        <div class="col-md-3 no_padding hourstime checkintimepad disabled" style="display: none;">
+          <label>End</label>
 
-
+          <%= f.select :end_time, placeholder: "end time", html_options: {class: 'form-control', disabled: true} %>
+        </div>
        
       </div>
 
@@ -108,7 +118,8 @@
 
             var input = {
               'start_date': start_date,
-              'end_date': end_date
+              'end_date': end_date,
+              'schedule': 'per_night'
             }
 
             $.ajax({
@@ -132,62 +143,10 @@
               }
             });
 
-
             var checkedradio=$('input[name="reservation[pricehourly]"]:checked').val();
             if(checkedradio=="1")
             {
-                var hourvalue=$('#reservation_hours').val();
-                var timevalue=$('#reservation_times').val();
-                if(hourvalue=='')
-                {
-                  alert('Please enter Hours');
-                  $('#reservation_start_date').val('');
-
-                }
-                else if(timevalue=='')
-                {
-                  alert('Please enter Time');
-                  $('#reservation_start_date').val('');
-                }
-                else
-                {
-
-                    var start_date = $('#reservation_start_date').datepicker('getDate');
-                    var end_date = $('#reservation_start_date').datepicker('getDate');
-                    var nights = (end_date - start_date)/1000/60/60/24 + 1;
-
-                    var input = {
-                      'start_date': start_date,
-                      'end_date': end_date
-                    }
-
-                    $.ajax({
-                      url: '<%= preview_room_path(@room) %>',
-                      data: input,
-                      success: function(data) {
-                         $('.reservation-table').show();
-                         $('#reservation_end_date').val($('#reservation_start_date').val());
-                        if(data.conflict) {
-                          $('#message').text("These dates are not available.");
-                          $('#preview').hide();
-                          $('#btn_book').attr('disabled', true);
-                        } else {
-                          $('#message').text("");
-                          $('#preview').show();
-                          $('#btn_book').attr('disabled', false);
-
-                          var total = hourvalue * <%= @room.pricehourly %>
-                          $('#reservation_nights').text(nights);
-                          $('#reservation_total_hour').text(total);
-
-                          $('#reservation_hourly').text(hourvalue);
-                          
-                        }
-                      }
-                    });
-
-                }
-
+                hourlyCommonMethod();
             }   
 
 
@@ -209,7 +168,8 @@
 
             var input = {
               'start_date': start_date,
-              'end_date': end_date
+              'end_date': end_date,
+              'schedule': 'per_night'
             }
 
             $.ajax({
@@ -238,7 +198,6 @@
       }
     });
 
-
     $("#reservation_pricehourly_1").on("click", function(){
         $('.checkout').hide();
         $('.hourstime').show();
@@ -255,6 +214,75 @@
         $('#reservation_end_date').val('');
     });
 
+
+    $("#reservation_start_time").on("change", function() {
+      $('#reservation_end_time').parent('.disabled').removeClass('disabled');
+
+      var end_time_array = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24";
+
+      split_array_1 = end_time_array.split(',' + $("#reservation_start_time").val() + ',')[1]
+      split_array_2 = end_time_array.split(',' + $("#reservation_start_time").val())[0] + ',' + $("#reservation_start_time").val();
+
+      var options = '<option disabled>End Time</option>';
+
+      $.each(split_array_1.split(','), function (index, value) {
+          options += '<option value="' + value + '">' + value + ':00</option>';
+      })
+      $.each(split_array_2.split(','), function (index, value) {
+          options += '<option value="' + value + '">' + value + ':00*</option>';
+      })
+
+      $('#reservation_end_time').html(options);
+      hourlyCommonMethod();
+    });
+
+    $("#reservation_end_time").on("change", function() {
+      hourlyCommonMethod();
+    });
+
+    var hourlyCommonMethod = function() {
+      var exactHour = parseInt($("#reservation_end_time").val()) - parseInt($("#reservation_start_time").val());
+
+      if(exactHour <= 0) {
+        exactHour = 24 + exactHour;
+      }
+      console.log(exactHour);
+
+      var start_date = $('#reservation_start_date').datepicker('getDate');
+      var start_time = $("#reservation_start_time").val();
+      var end_time = $("#reservation_end_time").val();
+
+      var input = {
+        'start_date': start_date,
+        'start_time': start_time,
+        'end_time': end_time,
+        'schedule': 'hourly'
+      }
+
+      $.ajax({
+        url: '<%= preview_room_path(@room) %>',
+        data: input,
+        success: function(data) {
+          $('.reservation-table').show();
+          $('#reservation_end_date').val($('#reservation_start_date').val());
+          if(data.conflict) {
+            $('#message').text("These dates are not available.");
+            $('#preview').hide();
+            $('#btn_book').attr('disabled', true);
+          } else {
+            $('#message').text("");
+            $('#preview').show();
+            $('#btn_book').attr('disabled', false);
+            var total = exactHour * <%= @room.pricehourly %>
+            $('#reservation_nights').text('0');
+            $('#reservation_total_hour').text(total);
+
+            $('#reservation_hourly').text(exactHour);
+            
+          }
+        }
+      });
+    }
 
   });
 </script>
